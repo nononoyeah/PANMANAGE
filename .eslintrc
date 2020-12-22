@@ -1,0 +1,52 @@
+{
+  "extends": "eslint:recommended",
+  "env": {
+    "es6": true,
+    "node": true,
+    "commonjs":true
+  },
+  // 解析器(需安装babel-eslint)
+  "parser": "babel-eslint",
+  // 解析器选项
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "rules": {
+    // 不要把空格和tab混用
+    "no-mixed-spaces-and-tabs": 2,
+    // 空行不能够超过2行
+    "no-multiple-empty-lines": [ 2, { "max": 2 } ],
+    // 使用单引号
+    "quotes": [ 1, "single", "avoid-escape" ],
+    // 加分号
+    "semi": [ 2, "always" ],
+    // 该规则规定了分号前后的空格，具体规定如下。
+    "semi-spacing": [
+        2,
+        {
+            "before": false,
+            "after": true
+        }
+    ],
+    // 代码块前面需要加空格
+    "space-before-blocks": [
+        2,
+        "always"
+    ],
+    // 圆括号内部不需要加空格
+    "space-in-parens": [
+        2,
+        "never"
+    ],
+    // 操作符前后需要加空格
+    "space-infix-ops": 2,
+    // 一元操作符前后是否需要加空格，单词类操作符需要加，而非单词类操作符不用加
+    "space-unary-ops": [
+        2,
+        {
+            "words": true,
+            "nonwords": false
+        }
+    ]
+  }
+}

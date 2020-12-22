@@ -1,0 +1,44 @@
+{
+  "log": {
+    "logToFile": true,
+    "dir": "./log"
+  },
+  "prod": {
+    "connect": "tcp://postgres:root@localhost/hunan_psql_bak",
+    "s3":  {
+      "client": {
+        "accessKeyId": "RXQKI9155656RGXI9JR0",
+        "secretAccessKey": "hENPOKdaaHx7eMOM56KpHfiEFYv9GcI2jjh6iRo0",
+        "endpoint": "http://192.168.32.5:8060",
+        "region": "cn-north-1",
+        "s3ForcePathStyle": true
+      },
+      "bucket": {
+        "initial": "portal",
+        "template": "datahuan-grouplayer",
+        "avatar": "avatar",
+        "mapcache": "cache-bucket",
+        "group": "datahuan-grouplayer"
+      }
+    }
+  },
+  "local": {
+    "connect": "tcp://postgres:root@localhost/hunan_psql_bak",
+    "s3":  {
+      "client": {
+        "accessKeyId": "YTDPQKTPXNZOMQGRQRYQ",
+        "secretAccessKey": "5QmwnLXlojJa8cpdwD6FPwOzutPmLiPq3npyVuKc",
+        "endpoint": "obs.myhuaweicloud.com",
+        "region": "cn-north-1",
+        "s3ForcePathStyle": true
+      },
+      "bucket": {
+        "initial": "zfx",
+        "template": "zfx",
+        "avatar": "zfx",
+        "mapcache": "zfx",
+        "group": "zfx"
+      }
+    }
+  }
+}
