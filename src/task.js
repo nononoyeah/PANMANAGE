@@ -188,6 +188,7 @@ class Task {
       data.size = stat.size;
       data.duration = duration;
       data.thumb = pic;
+      data.thumb_saved = true;
     } catch (error) {
       logger.error(error);
     }
@@ -220,6 +221,7 @@ class Task {
 
       data.size = stat.size;
       data.thumb = filename;
+      data.thumb_saved = true;
     } catch (error) {
       logger.error(error);
     }
