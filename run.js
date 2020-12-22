@@ -16,9 +16,8 @@ const PG = new PGManager();
 PG.connect()
 .then(async () => {
   task.setPGClient(PG);
-
   const marks = await task.getMarkData([uid], page, limit);
-  const data = await task.getMoveData(marks);
+  const data =  await task.getMoveData(marks);
   await task.move(data);
   console.log('执行完毕..........\n');
   await PG.end();
@@ -47,6 +46,6 @@ function std() {
 
   const page = program.page ? program.page : 1;
   const limit = program.limit ? program.limit : 10;
-  const uid = program.uid ? program.uid : 'ff808081719202590171a14fb2697742';
+  const uid = program.uid ? program.uid : 'ff808081719202590171a14fb2697743';
   return { page, limit, uid };
 }

@@ -117,7 +117,7 @@ class Task {
       } else {
         media = await this.image(cloud_filename);
       }
-      obj.thumb_saved = true;
+      obj.thumb_saved = media.thumb_saved;
       obj.filesize = media.size;
       obj.duration = media.duration;
       obj.thumb = media.thumb;
@@ -163,6 +163,7 @@ class Task {
       size: 0,
       duration: '',
       thumb: '',
+      thumb_saved: false,
     };
     try {
       const tempPath = `./video/${Date.now()}${path.extname(filename)}`;
@@ -173,6 +174,10 @@ class Task {
       await pipeline(s3.getObject(`标绘/${filename}`),fs.createWriteStream(tempPath));
       // 文件大小
       const stat = await fs.promises.stat(tempPath);
+      console.log(stat.size);
+      if(!stat.size) {
+        throw new Error(`${filename}文件已损坏`);
+      }
       // 首帧，时长
       const { firstFramePath, duration } = await ffmpeg.getVideoInfo(tempPath);
       // 上传首帧
@@ -194,6 +199,7 @@ class Task {
       size: 0,
       duration: '',
       thumb: '',
+      thumb_saved: false,
     };
     const tempPath = `./image/${Date.now()}${path.extname(filename)}`;
     try {
@@ -204,6 +210,10 @@ class Task {
       await pipeline(s3.getObject(`标绘/${filename}`), fs.createWriteStream(tempPath));
       // 大小
       const stat = await fs.promises.stat(tempPath);
+      console.log(stat.size);
+      if(!stat.size) {
+        throw new Error(`${filename}文件已损坏`);
+      }
       // 缩略图
       const thumbStream = sharp.compress(fs.createReadStream(tempPath));
       await s3.upload(`thumb/${filename}`, thumbStream);
