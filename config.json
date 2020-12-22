@@ -4,7 +4,7 @@
     "dir": "./log"
   },
   "prod": {
-    "connect": "tcp://postgres:root@localhost/hunan_psql_bak",
+    "connect": "tcp://postgres:esri@123@192.168.32.197/cloud_hunan",
     "s3":  {
       "client": {
         "accessKeyId": "RXQKI9155656RGXI9JR0",

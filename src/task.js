@@ -21,13 +21,15 @@ class Task {
 
   async getMarkData(uids, page = 1, limit = 10) {
     const { PG } = this;
+    // AND position('mp4' IN "filename") > 0
     const sql = `
       SELECT "id","groupid","layerid","spotid","mtype","userid","filename" AS "filenames","thumb_saved","created_at"
       FROM "mark_copy"
-      WHERE "userid" IN (${this.privateArrayToStr(uids)}) AND position('mp4' IN "filename") > 0
+      WHERE "userid" IN (${this.privateArrayToStr(uids)})
       ORDER BY "created_at" DESC
       LIMIT ${limit}
-      OFFSET (${(page-1)*limit});`;
+      OFFSET ${(page - 1) * limit};`;
+    logger.info('本次标绘查询语句：%s\n', sql);
     const { rows } = await PG.doQuery(sql);
     return rows;
   }
@@ -58,10 +60,11 @@ class Task {
           created_at: created_at instanceof Date && created_at.toLocaleString()
         };
         if (spotid) {
-          obj.show_filename = `${spotid}-${index}${filename.slice(filename.lastIndexOf('.'))}`;
+          obj.show_filename = `${spotid}-${index + 1}${filename.slice(filename.lastIndexOf('.'))}`;
         } else {
           const tms = created_at instanceof Date && moment(created_at).format('YYYYMMDDHHmmss');
-          obj.show_filename = `${tms}-${index}${filename.slice(filename.lastIndexOf('.'))}`;
+          const mms = this.privateGenmms(index);
+          obj.show_filename = `${tms}${mms}${filename.slice(filename.lastIndexOf('.'))}`;
         }
         obj.groupid = groupid ? groupid : '';
         obj.layerid = layerid ? layerid : '';
@@ -84,7 +87,6 @@ class Task {
         groupid,
         layerid,
         spotid,
-        filesize,
         filetype,
         show_filename,
         cloud_filename,
@@ -98,32 +100,28 @@ class Task {
         groupid,
         layerid,
         spotid,
-        filesize,
         filetype,
         show_filename,
         cloud_filename,
         thumb_saved,
-        thumb: cloud_filename,
         created_at
-      }
+      };
+      let media = {
+        size: 0,
+        thumb_saved: false,
+        thumb: '',
+        duration: '',
+      };
       if(filetype === 2) {
-        const data = await this.video(cloud_filename).catch(err => {
-          obj.thumb_saved = false;
-          obj.thumb = '';
-        });
-        obj.thumb_saved = true;
-        obj.filesize = data.size;
-        obj.duration = data.duration;
-        obj.thumb = data.thumb;
+        media = await this.video(cloud_filename);
       } else {
-        const data = await this.image(cloud_filename).catch(err => {
-          obj.thumb_saved = false;
-          obj.thumb = '';
-        });
-        obj.thumb_saved = true;
-        obj.filesize = data.size;
-        obj.duration = '';
+        media = await this.image(cloud_filename);
       }
+      obj.thumb_saved = true;
+      obj.filesize = media.size;
+      obj.duration = media.duration;
+      obj.thumb = media.thumb;
+
       const { PG } = this;
       const sql = `SELECT "id" FROM "pan_mark_copy" WHERE "markid" = '${markid}' AND "cloud_filename"='${cloud_filename}'`;
       const { rows } = await PG.doQuery(sql);
@@ -152,7 +150,7 @@ class Task {
           INSERT INTO "pan_mark_copy"
             ("id","thumb_saved","thumb","filesize","filetype","duration","created_at","cloud_filename","show_filename","spotid","layerid","groupid","userid","mtype","markid")
           VALUES
-            ('${uuid.v4()}',${obj.thumb_saved},'${obj.thumb}',${obj.filesize},${obj.filetype},'${obj.duration}','${obj.created_at}','${obj.cloud_filename}','${obj.show_filename}','${obj.spotid}','${obj.layerid}','${obj.groupid}','${obj.userid}',${obj.mtype},'${obj.markid}');`
+            ('${uuid.v4()}',${obj.thumb_saved},'${obj.thumb}',${obj.filesize},${obj.filetype},'${obj.duration}','${obj.created_at}','${obj.cloud_filename}','${obj.show_filename}','${obj.spotid}','${obj.layerid}','${obj.groupid}','${obj.userid}',${obj.mtype},'${obj.markid}');`;
       }
       logger.info('插入归档数据：\n');
       logger.info('SQL：%s\n', doSql);
@@ -161,8 +159,11 @@ class Task {
   }
 
   async video(filename) {
-    let size = 0;
-    let tduration = '';
+    const data = {
+      size: 0,
+      duration: '',
+      thumb: '',
+    };
     try {
       const tempPath = `./video/${Date.now()}${path.extname(filename)}`;
       await s3.headObject(`标绘/${filename}`).catch(err => {
@@ -172,23 +173,29 @@ class Task {
       await pipeline(s3.getObject(`标绘/${filename}`),fs.createWriteStream(tempPath));
       // 文件大小
       const stat = await fs.promises.stat(tempPath);
-      size = stat.size;
       // 首帧，时长
-      const { firstFramePath, duration } = ffmpeg.getVideoInfo(tempPath);
-      tduration = duration;
+      const { firstFramePath, duration } = await ffmpeg.getVideoInfo(tempPath);
       // 上传首帧
       const thumbStream = fs.createReadStream(firstFramePath);
       const pic = `${path.basename(filename, path.extname(filename))}.png`;
       await s3.upload(`thumb/${pic}`, thumbStream);
+
+      data.size = stat.size;
+      data.duration = duration;
+      data.thumb = pic;
     } catch (error) {
       logger.error(error);
     }
-    return { size, duration: tduration, thumb: pic };
+    return data;
   }
 
   async image(filename) {
-    let size = 0;
-    const tempPath = `./image/${Date.now()}${path.extname(filename)}`
+    const data = {
+      size: 0,
+      duration: '',
+      thumb: '',
+    };
+    const tempPath = `./image/${Date.now()}${path.extname(filename)}`;
     try {
       await s3.headObject(`标绘/${filename}`).catch(err => {
         console.log(err);
@@ -197,14 +204,16 @@ class Task {
       await pipeline(s3.getObject(`标绘/${filename}`), fs.createWriteStream(tempPath));
       // 大小
       const stat = await fs.promises.stat(tempPath);
-      size = stat.size;
       // 缩略图
       const thumbStream = sharp.compress(fs.createReadStream(tempPath));
       await s3.upload(`thumb/${filename}`, thumbStream);
+
+      data.size = stat.size;
+      data.thumb = filename;
     } catch (error) {
       logger.error(error);
     }
-    return { size };
+    return data;
   }
 
 
@@ -228,7 +237,12 @@ class Task {
       }
     }
     return str;
-  };
+  }
+
+  privateGenmms(index) {
+    const mms = String(index);
+    return index > 999 ? mms.slice(-3) : mms.padStart(3, '0');
+  }
 }
 
 module.exports = new Task();

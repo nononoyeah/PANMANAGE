@@ -13,16 +13,15 @@ class FfmpegService {
    * @param {String} videoPath 视频文件路径
    */
   async getVideoInfo(videoPath) {
-    const { ctx } = this;
     console.error(ffmpegStatic);
     // const firstFramePath = path.join(os.tmpdir(), `${Date.now()}.png`);
-    const firstFramePath = `./${Date.now()}.png`;
+    const firstFramePath = `./thumb/${Date.now()}.png`;
     // 输出首帧文件
     const bash = `${ffmpegStatic} -i ${videoPath} -y -f image2 -ss 00:00:01 -t 0.001 ${firstFramePath}`;
-    const { stdout, stderr } = await exec(bash).catch(error => {
+    const { /* stdout, */ stderr } = await exec(bash).catch(error => {
       console.error('获取视频首帧失败: %o\n', error);
     });
-    console.error(stdout, stderr);
+    // console.error(stdout, stderr);
     console.log(firstFramePath);
     // 提取视频时长
     const duration = this.privateFindDuration(stderr);
