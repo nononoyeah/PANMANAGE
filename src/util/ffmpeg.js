@@ -22,10 +22,9 @@ class FfmpegService {
       console.error('获取视频首帧失败: %o\n', error);
     });
     // console.error(stdout, stderr);
-    console.log(firstFramePath);
     // 提取视频时长
     const duration = this.privateFindDuration(stderr);
-    console.log(duration);
+    console.log(firstFramePath, duration);
     return { firstFramePath, duration };
   }
 

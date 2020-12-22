@@ -25,7 +25,7 @@ class Task {
     const sql = `
       SELECT "id","groupid","layerid","spotid","mtype","userid","filename" AS "filenames","thumb_saved","created_at"
       FROM "mark_copy"
-      WHERE "userid" IN (${this.privateArrayToStr(uids)})
+      WHERE "userid" IN (${this.privateArrayToStr(uids)}) AND position('mp4' IN "filename") > 0
       ORDER BY "created_at" DESC
       LIMIT ${limit}
       OFFSET ${(page - 1) * limit};`;
@@ -34,6 +34,56 @@ class Task {
     return rows;
   }
   
+  async getVideoMark(page, limit) {
+    const { PG } = this;
+    const uids = [
+      'ff808081719202590171a14fb2697742',
+      'ff80808171cef6500171dd1f1bc7143b',
+      'ff80808171cef6500171dd1da3b7142d',
+      'ff80808171cef6500171de4bf11a1762',
+      'ff80808171cef6500171dd1df8971433',
+      'ff80808171cef6500171dd1e34cd1437',
+      'ff80808171cef6500171dd2200851461',
+      'ff80808171cef6500171dd1c12431416',
+      'ff80808171cef6500171debb503719f7'
+    ];
+    const sql = `
+      SELECT "id","groupid","layerid","spotid","mtype","userid","filename" AS "filenames","thumb_saved","created_at"
+      FROM "mark_copy"
+      WHERE "userid" IN (${this.privateArrayToStr(uids)}) AND position('mp4' IN "filename") > 0
+      ORDER BY "created_at" DESC
+      LIMIT ${limit}
+      OFFSET ${(page - 1) * limit};`;
+    logger.info('本次标绘查询语句：%s\n', sql);
+    const { rows } = await PG.doQuery(sql);
+    return rows;
+  }
+
+  async getOtherMark(page, limit) {
+    const { PG } = this;
+    const uids = [
+      'ff808081719202590171a14fb2697742',
+      'ff80808171cef6500171dd1f1bc7143b',
+      'ff80808171cef6500171dd1da3b7142d',
+      'ff80808171cef6500171de4bf11a1762',
+      'ff80808171cef6500171dd1df8971433',
+      'ff80808171cef6500171dd1e34cd1437',
+      'ff80808171cef6500171dd2200851461',
+      'ff80808171cef6500171dd1c12431416',
+      'ff80808171cef6500171debb503719f7'
+    ];
+    const sql = `
+      SELECT "id","groupid","layerid","spotid","mtype","userid","filename" AS "filenames","thumb_saved","created_at"
+      FROM "mark_copy"
+      WHERE "userid" NOT IN (${this.privateArrayToStr(uids)})
+      ORDER BY "created_at" DESC
+      LIMIT ${limit}
+      OFFSET ${(page - 1) * limit};`;
+    logger.info('本次标绘查询语句：%s\n', sql);
+    const { rows } = await PG.doQuery(sql);
+    return rows;
+  }
+
   async getMoveData(marks) {
     const data = [];
     for (const mark of marks) {

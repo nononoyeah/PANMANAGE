@@ -16,7 +16,12 @@ const PG = new PGManager();
 PG.connect()
 .then(async () => {
   task.setPGClient(PG);
-  const marks = await task.getMarkData([uid], page, limit);
+  // 获取指定用户的标绘
+  // const marks = await task.getMarkData([uid], page, limit);
+  // 获取带有视频的标绘
+  // const marks = await task.getVideoMark(page, limit);
+  // 获取剩下的标绘
+  const marks = await task.getOtherMark(page, limit);
   const data =  await task.getMoveData(marks);
   await task.move(data);
   console.log('执行完毕..........\n');
@@ -46,6 +51,15 @@ function std() {
 
   const page = program.page ? program.page : 1;
   const limit = program.limit ? program.limit : 10;
-  const uid = program.uid ? program.uid : 'ff808081719202590171a14fb2697743';
+  // const uid = program.uid ? program.uid : 'ff808081719202590171a14fb2697742';
+  // const uid = program.uid ? program.uid : 'ff80808171cef6500171dd1f1bc7143b';
+  // const uid = program.uid ? program.uid : 'ff80808171cef6500171dd1da3b7142d';
+  // const uid = program.uid ? program.uid : 'ff80808171cef6500171de4bf11a1762';
+  // const uid = program.uid ? program.uid : 'ff80808171cef6500171dd1df8971433';
+  // const uid = program.uid ? program.uid : 'ff80808171cef6500171dd1e34cd1437';
+  // const uid = program.uid ? program.uid : 'ff80808171cef6500171dd2200851461';
+  // const uid = program.uid ? program.uid : 'ff80808171cef6500171dd1c12431416';
+  const uid = program.uid ? program.uid : 'ff80808171cef6500171debb503719f7';
+
   return { page, limit, uid };
 }
