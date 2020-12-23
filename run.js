@@ -9,28 +9,6 @@ process.on('uncaughtException', err => {
   console.error(err);
 });
 
-const { page, limit, uid } = std();
-console.log(page, limit, uid);
-
-const PG = new PGManager();
-PG.connect()
-.then(async () => {
-  task.setPGClient(PG);
-  // 获取指定用户的标绘
-  // const marks = await task.getMarkData([uid], page, limit);
-  // 获取带有视频的标绘
-  // const marks = await task.getVideoMark(page, limit);
-  // 获取剩下的标绘
-  const marks = await task.getOtherMark(page, limit);
-  const data =  await task.getMoveData(marks);
-  await task.move(data);
-  console.log('执行完毕..........\n');
-  await PG.end();
-})
-.catch(error => {
-  console.error(error);
-  PG.end();
-});
 
 function std() {
   // process.stdin.setEncoding('utf-8');
@@ -63,3 +41,52 @@ function std() {
 
   return { page, limit, uid };
 }
+
+function getThumb() {
+  const { page, limit, uid } = std();
+  console.log(page, limit, uid);
+
+  const PG = new PGManager();
+  PG.connect()
+  .then(async () => {
+    task.setPGClient(PG);
+    // 获取指定用户的标绘
+    // const marks = await task.getMarkData([uid], page, limit);
+    // 获取带有视频的标绘
+    // const marks = await task.getVideoMark(page, limit);
+    // 获取剩下的标绘
+    // const marks = await task.getOtherMark(page, limit);
+
+    // 获取特定的标绘
+    const marks = await task.getSpecialMark();
+    
+    const data =  await task.getMoveData(marks);
+    await task.move(data);
+    console.log('执行完毕..........\n');
+    await PG.end();
+  })
+  .catch(error => {
+    console.error(error);
+    PG.end();
+  });
+}
+
+// 获取缩略
+getThumb();
+
+async function sync() {
+  const PG = new PGManager();
+  PG.connect()
+  .then(async () => {
+    task.setPGClient(PG);
+    // 同步缩略图处理结果
+    await task.syncToMark();
+    console.log('执行完毕..........\n');
+    await PG.end();
+  })
+  .catch(error => {
+    console.error(error);
+    PG.end();
+  });
+}
+// sync();

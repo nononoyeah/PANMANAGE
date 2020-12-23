@@ -84,6 +84,44 @@ class Task {
     return rows;
   }
 
+  async getSpecialMark() {
+    const { PG } = this;
+
+    const sql = `
+    SELECT "id","groupid","layerid","spotid","mtype","userid","filename" AS "filenames","thumb_saved","created_at"
+    FROM "mark_copy"
+    WHERE "id" = '7657e67f-8704-47cd-b3b4-6c044324feea';`;
+    logger.info('本次标绘查询语句：%s\n', sql);
+    const { rows } = await PG.doQuery(sql);
+    return rows;
+  }
+
+  async syncToMark() {
+    const { PG } = this;
+    // pan_mark_copy 
+    const sqlp = 'SELECT DISTINCT("markid") FROM "pan_mark_copy" ';
+    const { rows: p } = await PG.doQuery(sqlp);
+    // 同步成功的标绘ID
+    const markids_success = p.map(r => { return r.markid; });
+    // mark_copy
+    // const sqlm = 'SELECT DISTINCT("markid") FROM "mark_copy" AND "created_at" <= \'2020-12-21 07:36:33.497+00\'';
+    const sqlm = 'SELECT DISTINCT("id") FROM "mark_copy"';
+    const { rows: m } = await PG.doQuery(sqlm);
+    const ids = m.map(r => { return r.id; });
+
+    // 同步失败的标绘ID
+    const markids_failed = ids.filter(i => { return !markids_success.includes(i); });
+
+    // mark_copy
+    const sql2 = `UPDATE "mark_copy" SET "thumb_saved"=TRUE WHERE "id" IN(${this.privateArrayToStr(markids_success)})`;
+    const sql3 = `UPDATE "mark_copy" SET "thumb_saved"=FALSE WHERE "id" IN(${this.privateArrayToStr(markids_failed)})`;
+    logger.info('本次标绘更新：同步成功的数量：%d\n语句sql2：%s\n', markids_success.length, sql2);
+    logger.info('本次标绘更新：同步失败的数量：%d\n语句sql3：%s\n', markids_failed.length, sql3);
+
+    await PG.doQuery(sql2);
+    markids_failed.length && await PG.doQuery(sql3);
+  }
+
   async getMoveData(marks) {
     const data = [];
     for (const mark of marks) {
@@ -126,7 +164,6 @@ class Task {
     }
     return data;
   }
-
   
   async move(data) {
     for (let index = 0; index < data.length; index++) {
