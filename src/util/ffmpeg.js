@@ -3,7 +3,7 @@ const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const ffmpegStatic = require('ffmpeg-static');
 // const os = require('os');
-// const path = require('path');
+const path = require('path');
 
 class FfmpegService {
 
@@ -15,13 +15,14 @@ class FfmpegService {
   async getVideoInfo(videoPath) {
     console.error(ffmpegStatic);
     // const firstFramePath = path.join(os.tmpdir(), `${Date.now()}.png`);
-    const firstFramePath = `./thumb/${Date.now()}.png`;
+    // const firstFramePath = `./thumb/${Date.now()}.png`;
+    const firstFramePath = path.resolve(__dirname, `../../thumb/${Date.now()}.png`);
     // 输出首帧文件
-    const bash = `${ffmpegStatic} -i ${videoPath} -y -f image2 -ss 00:00:01 -t 0.001 ${firstFramePath}`;
-    const { /* stdout, */ stderr } = await exec(bash).catch(error => {
+    const bash = `${ffmpegStatic} -i ${videoPath} -y -f image2 -ss 00:00:00.05 -t 0.001 ${firstFramePath}`;
+    const { stdout, stderr } = await exec(bash).catch(error => {
       console.error('获取视频首帧失败: %o\n', error);
     });
-    // console.error(stdout, stderr);
+    console.error(stdout, stderr);
     // 提取视频时长
     const duration = this.privateFindDuration(stderr);
     console.log(firstFramePath, duration);
