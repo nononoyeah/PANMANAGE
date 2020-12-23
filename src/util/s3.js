@@ -75,5 +75,4 @@ class S3Manager {
 }
 
 
-
 module.exports = new S3Manager();

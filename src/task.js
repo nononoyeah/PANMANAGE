@@ -1,3 +1,4 @@
+// 处理历史标绘缩略图
 
 const fs = require('fs');
 const path = require('path');
