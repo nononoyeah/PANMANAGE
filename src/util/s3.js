@@ -66,7 +66,7 @@ class S3Manager {
   }
   
   headObject(Key, bucket) {
-    return this.s3.getObject({
+    return this.s3.headObject({
       Bucket: bucket ? bucket : config.s3.bucket.initial,
       Key,
     }).promise();
